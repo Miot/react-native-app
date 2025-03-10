@@ -1,4 +1,4 @@
-import { Text, View, TextInput, Pressable, StyleSheet, FlatList } from "react-native";
+import { Text, View, TextInput, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useContext, useEffect } from "react";
 import { data } from "../data/todos";
@@ -8,11 +8,13 @@ import { ThemeContext } from "@/context/ThemeContext";
 import Octicons from '@expo/vector-icons/Octicons';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 export default function Index() {
   const [todos, setTodos] = useState([]);
   const [text, setText] = useState("");
+  const router = useRouter();
 
   const [loaded, error] = useFonts({
     Inter_500Medium
@@ -55,6 +57,10 @@ export default function Index() {
     setText('')
   }
 
+  const handlePress = (id) => {
+    router.push(`/todos/${id}`)
+  }
+
   const toggleTodo = (id) => {
     setTodos(todos.map((todo) => todo.id === id ? {...todo, completed: !todo.completed} : todo))
   }
@@ -66,10 +72,16 @@ export default function Index() {
   const renderItem = ({item}) => {
     return (
       <View style={styles.todoItem}>
-        <Text style={[styles.todoText, item.completed && styles.completedText]} onPress={() => toggleTodo(item.id)}>{item.title}</Text>
+        <Pressable
+          onPress={() => handlePress(item.id)}
+          onLongPress={() => toggleTodo(item.id)}
+        >
+          <Text style={[styles.todoText, item.completed && styles.completedText]}>{item.title}</Text>
+        </Pressable>
         <Pressable onPress={() => deleteTodo(item.id)}>
           <AntDesign name="delete" size={36} color="red" selectable={undefined} />
         </Pressable>
+        
       </View>
     )
   }
@@ -77,7 +89,13 @@ export default function Index() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inputContainer}>
-        <TextInput style={styles.input} placeholder="Add a new todo" value={text} onChangeText={setText} />
+        <TextInput
+          style={styles.input}
+          placeholder="Add a new todo"
+          value={text}
+          maxLength={30}
+          onChangeText={setText}
+        />
         <Pressable onPress={addTodo} style={styles.addButton}>
           <Text style={styles.addButtonText}>Add</Text>
         </Pressable>
